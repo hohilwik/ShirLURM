@@ -1,0 +1,73 @@
+#!/bin/bash
+
+# Check if there are at least two arguments
+if [ "$#" -lt 3 ]; then
+    echo "Usage: submitjob num-cpus num-gpus path-to-script"
+    exit 1
+fi
+
+# Extract arguments
+arg1="$1"
+arg2="$2"
+arg3="$3"
+
+max_cpus=80
+max_gpus=2
+
+# Check if arguments exceed maximum values
+if [ "$arg1" -gt "$max_cpus" ]; then
+    echo "Error: $arg1 exceeds the maximum number of CPUs ($max_cpus)"
+    exit 1
+fi
+
+if [ "$arg2" -gt "$max_gpus" ]; then
+    echo "Error: $arg2 exceeds the maximum number of GPUs ($max_gpus)"
+    exit 1
+fi
+
+if [ "$arg1" -lt 0 ] || [ "$arg2" -lt 0 ]; then
+    echo "Requested resources cannot be negative"
+    exit 1
+fi
+
+# Check if the provided script file exists
+if [ ! -f "$arg3" ]; then
+    echo "Error: Script file $arg3 not found."
+    exit 1
+fi
+
+# Extract username
+current_user="$USER"
+
+# provided arguments
+echo "Requested CPUs: $arg1"
+echo "Requested GPUs: $arg2"
+echo "Path to script: $arg3"
+
+# Generate a 10-digit number
+
+sleep 1
+ascii_sum=0
+
+for ((i = 0; i < ${#current_user}; i++)); do
+    char="${current_user:$i:1}"
+    ascii_value=$(printf "%d" "'$char")
+    ((ascii_sum=ascii_sum+ascii_value))
+done
+
+sum_ascii=$((ascii_sum % 9999))
+line_count=$(wc -l < "./queue_file.txt")
+current_minutes=$(date +"%M")
+current_seconds=$(date +"%S")
+jobID="$(printf "%04d" "$sum_ascii")$(printf "%02d" "$line_count")$(printf "%02d" "$current_minutes")"$(printf "%02d" "$current_seconds")
+
+echo "Generated 10-digit number: $jobID"
+
+# echo jobID to user
+echo "$current_user, your jobID $jobID has been accepted"
+
+# Additional commands or functionality can be added as needed
+
+# Modify queue file in /usr/local/bin
+echo "Adding to queue..."
+echo "user=$current_user jobID=$jobID cpus=$arg1 gpus=$arg2 path_script=$arg3" | sudo tee -a /usr/local/bin/queue_file.txt > /dev/null
