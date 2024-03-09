@@ -1,0 +1,55 @@
+#!/bin/bash
+
+inputFile="/usr/local/bin/queue_file.txt"
+
+# Check if the correct number of arguments is provided
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <jobID_to_cancel>"
+    exit 1
+fi
+
+if [ "$(id -u)" -eq 0 ]; then
+    current_user=${SUDO_USER:-${USER}}
+else
+    current_user="$USER"
+fi
+
+user_to_delete=$current_user
+job_id_to_delete="$1"
+jobid="$1"
+flag=0
+
+
+output=$(grep -n -E "user=$current_user jobID=$jobid" "$inputFile" | cut -d ":" -f 1)
+
+
+tempnum="$output"
+numlines=$(echo "$output" | wc -l)
+#echo $numlines
+
+# Check the exit status of the command
+if [ $? -eq 0 ]; then
+    # Check if the output is not empty
+    if [[ "$numlines" -eq 1 && -n "$output" ]]; then
+        # Matches found, process the output
+  lineNumber="$output"
+  echo "Queue position $lineNumber"
+    else
+        # No matches found, handle accordingly
+        echo "jobID=$job_id_to_delete corresponding to $current_user not found"
+  exit 1
+    fi
+else
+    # Command failed, display an error message
+    echo "Error: Unable to retrieve from queue"
+    exit 1
+fi
+
+# delete line
+awk -v lineNumber="$lineNumber" 'NR != lineNumber' "$inputFile" > "$inputFile.new" && mv "$inputFile.new" "$inputFile"
+
+if [ $? -eq 0 ]; then
+  echo "jobID=$job_id_to_delete by user=$user_to_delete canceled successfully."
+else
+  echo "Error deleting job"
+fi
