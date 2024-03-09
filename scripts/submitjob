@@ -37,7 +37,11 @@ if [ ! -f "$arg3" ]; then
 fi
 
 # Extract username
-current_user="$USER"
+if [ "$(id -u)" -eq 0 ]; then
+    current_user=${SUDO_USER:-${USER}}
+else
+    current_user="$USER"
+fi
 
 # provided arguments
 echo "Requested CPUs: $arg1"
@@ -56,18 +60,26 @@ for ((i = 0; i < ${#current_user}; i++)); do
 done
 
 sum_ascii=$((ascii_sum % 9999))
-line_count=$(wc -l < "./queue_file.txt")
+line_count=$(wc -l < "/usr/local/bin/queue_file.txt")
 current_minutes=$(date +"%M")
 current_seconds=$(date +"%S")
 jobID="$(printf "%04d" "$sum_ascii")$(printf "%02d" "$line_count")$(printf "%02d" "$current_minutes")"$(printf "%02d" "$current_seconds")
 
 echo "Generated 10-digit number: $jobID"
 
-# echo jobID to user
-echo "$current_user, your jobID $jobID has been accepted"
+## echo jobID to user
+#echo "$current_user, your jobID $jobID has been accepted"
 
 # Additional commands or functionality can be added as needed
 
 # Modify queue file in /usr/local/bin
 echo "Adding to queue..."
+#echo ${SUDO_USER:-${USER}}
 echo "user=$current_user jobID=$jobID cpus=$arg1 gpus=$arg2 path_script=$arg3" | sudo tee -a /usr/local/bin/queue_file.txt > /dev/null
+
+if [ $? -eq 0 ]; then
+    # echo jobID to user
+    echo "$current_user, your jobID $jobID has been accepted"
+else
+    echo "Error adding to queue, please check documentation"
+fi
