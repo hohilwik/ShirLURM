@@ -1,0 +1,70 @@
+#!/bin/bash
+
+cpu_t=50
+mem_t=1900
+gutil_t=15
+
+nlines=$(nproc)
+# Run mpstat command and extract %idle column
+mpstat_output=$(mpstat -P ALL 1 1 | awk -v n=$nlines '{if(NR>4 && NR<=n+4) print $NF}')
+
+overallcpu=$(mpstat -P ALL 1 1 | awk -v n=$nlines '{if(NR>3 && NR<=4) print $NF}')
+#echo "$overallcpu"
+
+overallcpu=$(echo "$nlines + $overallcpu" | bc)
+prelim_count=$(echo "scale=0; ($overallcpu * $nlines) / 100" | bc)
+
+### this returns idle% for all CPU cores
+
+# Set the threshold and mode values
+threshold=$((100 - $cpu_t))
+mode=1
+# mode 0 for below threshold, mode 1 for above threshold
+
+command_output=$mpstat_output
+# Initialize count variable
+count=0
+
+# Check mode and count accordingly
+if [ "$mode" -eq 0 ]; then
+    count=$(echo "$command_output" | awk -v threshold="$threshold" '$1 < threshold {count++} END {print count}')
+elif [ "$mode" -eq 1 ]; then
+    count=$(echo "$command_output" | awk -v threshold="$threshold" '$1 > threshold {count++} END {print count}')
+else
+    echo "Invalid mode. Use 0 for counting below threshold, or 1 for counting above threshold."
+    exit 1
+fi
+
+
+if [ "$prelim_count" -lt "$count" ]; then
+    cpu_avail=$prelim_count
+else
+    cpu_avail=$count
+fi
+
+### Now check GPU availability
+
+# thresholds
+threshold1=$mem_t
+threshold2=$gutil_t
+
+# Run command1 and command2 and store the outputs in arrays
+output1=($(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits))
+output2=($(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits))
+
+#echo "$output1"
+
+# Initialize a counter
+count=0
+
+# Loop through the arrays and compare the values
+for ((i=0; i<${#output1[@]}; i++)); do
+    if [[ ${output1[i]} -lt $threshold1 && ${output2[i]} -lt $threshold2 ]]; then
+        ((count++))
+    fi
+done
+
+gpu_avail=$count
+
+#echo "$prelim_count"
+echo "$cpu_avail $gpu_avail"
