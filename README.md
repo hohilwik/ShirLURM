@@ -2,9 +2,11 @@
 Shirley's Linux Utility for Resource Management and job queue handling for compute clusters. Implemented as bash scripts and a cronjob. Minimal overhead and dependencies.
 
 # Usage
-- `submitjob numcpus numgpus full-path-to-script` (will display generated jobID which is a 10-digit number)
-- `canceljob jobID`
-- `displayjobqueue`
+- `sudo submitjob numcpus numgpus full-path-to-script` (will display generated jobID which is a 10-digit number)
+- `sudo canceljob jobID`
+- `resourcetracker`
+- `jobqueue`
+- Note: all users have permissions to run these scripts as root
 
 # Command Documentation For Users
 
@@ -16,16 +18,19 @@ Shirley's Linux Utility for Resource Management and job queue handling for compu
 - will return errors if numcpus or numgpus is outside of limits
 - will return error if script does not exist at given path
 - Returns jobID if job is successfully added to the queue
-- Example: `submitjob 5 1 /home/testuser/codefolder/jobscript.sh`
+- Example: `sudo submitjob 5 1 /home/testuser/codefolder/jobscript.sh`
 
 ## canceljob
 - expects argument `jobID` as a 10-digit number
 - will return an error if the jobID is for a different user than the one requesting cancellation
-- Example: `canceljob 0768110458`
+- Example: `sudo canceljob 0768110458`
 
-## displayjobqueue
+## resourcetracker
+- returns two numbers: avail_CPUS avail_GPUS
+
+## jobqueue
 - will display all jobs in queue, with username and requested resources
-- Example: `displayjobqueue`
+- Example: `jobqueue`
      
 
 # Current dependencies
@@ -61,9 +66,11 @@ Shirley's Linux Utility for Resource Management and job queue handling for compu
 # How to deploy
 - files in command folder need to be in /usr/local/bin with execute permissions, and need to be given sudo permissions (as they need to modify the queue file)
 - Add to `/etc/sudoers` the following lines:
-  ```# Allow all users to run submitjob, canceljob
+  ```
+  # Allow all users to run submitjob, canceljob
   ALL ALL=NOPASSWD: /usr/local/bin/submitjob
-  ALL ALL=NOPASSWD: /usr/local/bin/canceljob```
+  ALL ALL=NOPASSWD: /usr/local/bin/canceljob
+  ```
 - Users should not be able to modify queue file (stored in /usr/local/bin)
 - Modify the variables for max_gpus, max_cpus, and not-in-use thresholds
 - max_gpus and max_cpus can also be dynamically set on a per-system basis using `nproc` and `nvidia-smi -L | wc -l`, however it is better to set global limits for the cluster
