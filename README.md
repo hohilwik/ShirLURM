@@ -60,6 +60,10 @@ Shirley's Linux Utility for Resource Management and job queue handling for compu
 
 # How to deploy
 - files in command folder need to be in /usr/local/bin with execute permissions, and need to be given sudo permissions (as they need to modify the queue file)
+- Add to `/etc/sudoers` the following lines:
+  ```# Allow all users to run submitjob, canceljob
+  ALL ALL=NOPASSWD: /usr/local/bin/submitjob
+  ALL ALL=NOPASSWD: /usr/local/bin/canceljob```
 - Users should not be able to modify queue file (stored in /usr/local/bin)
 - Modify the variables for max_gpus, max_cpus, and not-in-use thresholds
 - max_gpus and max_cpus can also be dynamically set on a per-system basis using `nproc` and `nvidia-smi -L | wc -l`, however it is better to set global limits for the cluster
