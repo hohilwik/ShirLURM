@@ -1,4 +1,40 @@
 #!/bin/bash
 
-cat ./queue_file.txt
-sleep 1
+# Function to print help message
+print_help() {
+    echo "Usage: $0 [--help]"
+    echo "Prints the README.md from the documentation GitHub repository."
+    echo "  --help      Display this help message."
+}
+
+
+if [ "$#" -eq 0 ]; then
+        echo "Current queue:"
+        cat /usr/local/bin/queue_file.txt
+        sleep 1
+        exit 0
+fi
+
+
+# Check if the script is run with the "--help" flag
+if [[ "$1" == "--help" ]]; then
+    print_help
+    sleep 1
+    #exit 0
+fi
+
+# Hardcoded GitHub repository
+repo_owner="hohilwik"
+repo_name="ShirLURM"
+
+# Retrieve README.md content using curl
+readme_content=$(curl -s "https://raw.githubusercontent.com/$repo_owner/$repo_name/main/README.md")
+
+# Check if README.md content is empty
+if [[ -z "$readme_content" ]]; then
+    echo "Error: Unable to retrieve README.md from the specified repository."
+    exit 1
+fi
+
+# Print README.md content
+echo "$readme_content"
