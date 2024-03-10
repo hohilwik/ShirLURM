@@ -37,4 +37,6 @@ if [[ -z "$readme_content" ]]; then
 fi
 
 # Print README.md content
-echo "$readme_content"
+echo "$readme_content" > $HOME/forUsers.md
+mdv $HOME/forUsers.md
+#echo "$readme_content"
