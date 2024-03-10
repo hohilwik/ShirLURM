@@ -45,5 +45,5 @@ Shirley's Linux Utility for Resource Management and job queue handling for compu
 - (any user attempts to cancel another user's jobs are logged. Do not do this)
 - When a job is assigned hardware or canceled, it is removed from the queue
 - Running jobs are not in queue, but are logged separately
-- Using PIDs, running jobs can be canceled, use `htop -u <your_username>` to see your running processes
+- Using PIDs, running jobs can be canceled, use `htop -u $USER` to see your running processes
 
