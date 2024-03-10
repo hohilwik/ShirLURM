@@ -28,7 +28,7 @@ repo_owner="hohilwik"
 repo_name="ShirLURM"
 
 # Retrieve README.md content using curl
-readme_content=$(curl -s "https://raw.githubusercontent.com/$repo_owner/$repo_name/main/README.md")
+readme_content=$(curl -s "https://raw.githubusercontent.com/$repo_owner/$repo_name/main/forUsers.md")
 
 # Check if README.md content is empty
 if [[ -z "$readme_content" ]]; then
